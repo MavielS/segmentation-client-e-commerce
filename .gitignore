@@ -5,6 +5,9 @@
 *.zip
 *.pkl
 
+eda_var.xlsx
+csv_files
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
