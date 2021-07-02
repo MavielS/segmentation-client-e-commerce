@@ -7,6 +7,7 @@
 
 eda_var.xlsx
 csv_files
+img/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

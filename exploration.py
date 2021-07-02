@@ -8,6 +8,13 @@ from collections import Counter
 import squarify
 import matplotlib.colors
 
+import plotly.io as pio
+import plotly.express as px
+from plotly.subplots import make_subplots
+import plotly.graph_objects as go
+
+############################# Affichage ############################
+
 def analyse_forme(df,thresh_na=60, all=False):
     
     statList = {'Taille':[df.size],'Nb lignes':[df.shape[0]],
@@ -55,7 +62,112 @@ def analyse_forme(df,thresh_na=60, all=False):
         ax2.set_yticks(np.arange(0,101,5))
 
         plt.show()
+    
+def mesure_forme_col(data: pd.Series, bins=None, title='Distribution et boxplot', figsize=(12,8), plotly=True):  
+    '''
+    Nous affiche un bel histogramme (et son boxplot associé) de la colonne data.
+    '''
+    
+    # TODO: Vérifier le type de donnée passée
+    
+    if bins == None:
+        # Sturge's Rule
+        bins = int(1 + 3.322*np.log(len(data.unique())))
+        print(f'Nb de bins optimal estimé: {bins}')
+    
+    try:
+        dataMean = round(data.dropna().mean(), 2)
+        dataMedian = round(data.dropna().median(), 2)
+        dataStd = round(data.dropna().std(),  2)
+        dataSkew = round(data.dropna().skew(), 2)
+        dataKurt = round(data.dropna().kurt(), 2)
+        q1 = round(data.quantile(0.25), 2)
+        q3 = round(data.quantile(0.75), 2)
+    except Exception as e:
+        print(f'Erreur: {e}.')
+        return
+    
+    if plotly:
+        
+        fig = make_subplots(rows=2, cols=1, shared_xaxes=True)
 
+        fig.add_annotation(
+            arg=  go.layout.Annotation(
+                        text=f'Skewness: {dataSkew}<br>Kurtosis: {dataKurt}<br>Moyenne: {dataMean}<br>Variance: {dataStd}<br>Médiane {dataMedian}<br>Q1: {q1}<br>Q3: {q3}',
+                        align='left',
+                        showarrow=False,
+                        xref='paper',
+                        yref='paper',
+                        y=1,x=1,
+                        bgcolor='white',
+                        bordercolor='black',
+                        borderwidth=0.5
+                    )
+        )
+
+        fig.add_trace(
+            go.Histogram(x=data, name='Histogramme', nbinsy=bins),
+            row=1, col=1
+        )
+
+        fig.add_trace(
+            go.Box(x=data, orientation='h', marker_color='indianred', boxmean='sd', name='Boxplot'),
+            row=2, col=1
+        )
+
+
+        fig.update_layout(height=600, width=800, title = dict(text=title) ) 
+
+        fig.show()
+#         return fig
+    else:
+    
+        fig, (ax_hist, ax_box) = plt.subplots(2, sharex=True, gridspec_kw= {"height_ratios": (1, 0.2)}, figsize=figsize)
+
+        sns.histplot(ax=ax_hist, data=data.dropna(),kde=True, bins=bins, color=sns.color_palette('deep')[0])
+
+        ax_hist.plot([], [], ' ', label=f'Skewness = {dataSkew}')
+        ax_hist.plot([], [], ' ', label=f'Kurtosis = {dataKurt}')
+        ax_hist.plot([], [], ' ', label=f'Moyenne  = {dataMean}')
+        ax_hist.plot([], [], ' ', label=f'Variance = {dataStd}')
+        ax_hist.plot([], [], ' ', label=f'Mediane = {dataMedian}')
+        ax_hist.plot([], [], ' ', label=f'Q1 = {q1}')
+        ax_hist.plot([], [], ' ', label=f'Q3 = {q3}')
+
+        ax_hist.legend( loc='upper right', borderaxespad=0., fontsize='large')    
+        ax_hist.set_title(title,fontsize=20)
+
+        meanprops = {'marker':'o', 'markeredgecolor':'black','markerfacecolor':'firebrick'}
+
+        sns.boxplot(ax=ax_box, x=data.dropna(), showmeans=True, meanprops=meanprops, color=sns.color_palette('deep')[0])
+
+        ax_box.set_xlabel("")
+        ax_box.set_ylabel("")
+
+        plt.xticks(fontsize=17)
+        plt.yticks(fontsize=17)    
+
+        plt.show()
+    
+def squarify_value_counts(data: pd.Series, title: str='Répartition valeurs quantitatives/qualitatives'):
+    # TODO: Faire en sorte qu'on lui passe une figure pour ajouter un ax a cette figure
+    plt.subplots(figsize=(16,16))
+
+    vc = data.value_counts()
+
+    # create a color palette, mapped to these values
+    cmap = matplotlib.cm.Reds
+    mini=min(vc)
+    maxi=max(vc)
+    norm = matplotlib.colors.Normalize(vmin=mini, vmax=maxi)
+    colors = [cmap(norm(value)) for value in vc]
+
+    squarify.plot(sizes=list(vc.values), label=pd.Series(vc.keys()).to_string(index=False).replace(" ", "").splitlines(), alpha=.8, value=round(vc/vc.sum(),2), pad=0.05, color=colors,  text_kwargs={'fontsize': 22, 'fontfamily' : 'sans-serif'})
+    plt.axis('off')
+    plt.title(title,fontsize=20,weight='bold')
+
+    
+#####################################################################
         
 
 def premier_quartile(data_frame,colonne):
@@ -143,46 +255,7 @@ def outliers_mod_z(data: pd.DataFrame, col: str, thresh: int=3, alpha: float=0.6
         outliers_sup =  outliers_sup.append(to_add_sup)
 
         return outliers_inf, outliers_sup
-    
-def mesure_forme(data: pd.DataFrame, col: str, bins=None):  
-    '''
-    Nous affiche un bel histogramme (et son boxplot associé) de la variable col
-    '''
-    if bins == None:
-        # Sturge's Rule
-        bins = int(1 + 3.322*np.log(len(data[col].unique())))
-        print(f'Nb de bins optimal estimé: {bins}')
-    
-    dataMean = round(data[col].dropna().mean(), 2)
-    dataMedian = round(data[col].dropna().median(), 2)
-    dataStd = round(data[col].dropna().std(),  2)
-    dataSkew = round(data[col].dropna().skew(), 2)
-    dataKurt = round(data[col].dropna().kurt(), 2)
-    
-    fig, (ax_hist, ax_box) = plt.subplots(2, sharex=True, gridspec_kw= {"height_ratios": (1, 0.2)}, figsize=(12,8))
-    
-    sns.histplot(ax=ax_hist, data=data[col].dropna(),kde=True, bins=bins, color=sns.color_palette('deep')[0])
-    
-    ax_hist.plot([], [], ' ', label=f'Skewness = {dataSkew}')
-    ax_hist.plot([], [], ' ', label=f'Kurtosis = {dataKurt}')
-    ax_hist.plot([], [], ' ', label=f'Moyenne  = {dataMean}')
-    ax_hist.plot([], [], ' ', label=f'Variance = {dataStd}')
-    ax_hist.plot([], [], ' ', label=f'Mediane = {dataMedian}')
-    
-    ax_hist.legend( loc='upper right', borderaxespad=0., fontsize='large')    
-    ax_hist.set_title(f'Distribution {col}',fontsize=20)
 
-    meanprops = {'marker':'o', 'markeredgecolor':'black','markerfacecolor':'firebrick'}
-    
-    sns.boxplot(ax=ax_box, x=data[col].dropna(), showmeans=True, meanprops=meanprops, color=sns.color_palette('deep')[0])
-    
-    ax_box.set_xlabel("")
-    ax_box.set_ylabel("")
-        
-    plt.xticks(fontsize=17)
-    plt.yticks(fontsize=17)    
-    
-    plt.show()
     
 def data_trimming(data, quantile_sup=0.995, quantile_inf=0.005):
     '''
