@@ -83,6 +83,7 @@ def mesure_forme_col(data: pd.Series, bins=None, title='Distribution et boxplot'
         dataKurt = round(data.dropna().kurt(), 2)
         q1 = round(data.quantile(0.25), 2)
         q3 = round(data.quantile(0.75), 2)
+        mini = data.min()
     except Exception as e:
         print(f'Erreur: {e}.')
         return
@@ -93,7 +94,7 @@ def mesure_forme_col(data: pd.Series, bins=None, title='Distribution et boxplot'
 
         fig.add_annotation(
             arg=  go.layout.Annotation(
-                        text=f'Skewness: {dataSkew}<br>Kurtosis: {dataKurt}<br>Moyenne: {dataMean}<br>Variance: {dataStd}<br>Médiane {dataMedian}<br>Q1: {q1}<br>Q3: {q3}',
+                        text=f'Skewness: {dataSkew}<br>Kurtosis: {dataKurt}<br>Moyenne: {dataMean}<br>Ecart-type: {dataStd}<br>Médiane {dataMedian}<br>Q1: {q1}<br>Q3: {q3} <br>Max: {data.max()} <br>Min {data.min()}',
                         align='left',
                         showarrow=False,
                         xref='paper',
@@ -116,7 +117,7 @@ def mesure_forme_col(data: pd.Series, bins=None, title='Distribution et boxplot'
         )
 
 
-        fig.update_layout(height=600, width=800, title = dict(text=title) ) 
+        fig.update_layout(height=600, width=1000, title = dict(text=title) ) 
 
         fig.show()
 #         return fig
@@ -129,7 +130,7 @@ def mesure_forme_col(data: pd.Series, bins=None, title='Distribution et boxplot'
         ax_hist.plot([], [], ' ', label=f'Skewness = {dataSkew}')
         ax_hist.plot([], [], ' ', label=f'Kurtosis = {dataKurt}')
         ax_hist.plot([], [], ' ', label=f'Moyenne  = {dataMean}')
-        ax_hist.plot([], [], ' ', label=f'Variance = {dataStd}')
+        ax_hist.plot([], [], ' ', label=f'Ecart-type = {dataStd}')
         ax_hist.plot([], [], ' ', label=f'Mediane = {dataMedian}')
         ax_hist.plot([], [], ' ', label=f'Q1 = {q1}')
         ax_hist.plot([], [], ' ', label=f'Q3 = {q3}')
@@ -149,11 +150,22 @@ def mesure_forme_col(data: pd.Series, bins=None, title='Distribution et boxplot'
 
         plt.show()
     
-def squarify_value_counts(data: pd.Series, title: str='Répartition valeurs quantitatives/qualitatives'):
+def squarify_value_counts(data: pd.Series, nb_square: int= 8, title: str='Répartition valeurs quantitatives/qualitatives'):
     # TODO: Faire en sorte qu'on lui passe une figure pour ajouter un ax a cette figure
     plt.subplots(figsize=(16,16))
+    
+    # Sélectionne les nb_square catégories les + présentes 
+    vc_tmp = data.value_counts()/data.shape[0]
+    
+    if nb_square >= vc_tmp.shape[0]:
+        nb_square =  vc_tmp.shape[0]
+    
+    th = vc_tmp.iloc[nb_square-1]
 
-    vc = data.value_counts()
+    to_append_vc = 1 - vc_tmp[(data.value_counts()/data.shape[0]) > th].sum()
+    vc = vc_tmp[(data.value_counts()/data.shape[0]) > th]
+
+    vc = vc.append(pd.Series(data={'Others':to_append_vc}))
 
     # create a color palette, mapped to these values
     cmap = matplotlib.cm.Reds
@@ -161,6 +173,8 @@ def squarify_value_counts(data: pd.Series, title: str='Répartition valeurs quan
     maxi=max(vc)
     norm = matplotlib.colors.Normalize(vmin=mini, vmax=maxi)
     colors = [cmap(norm(value)) for value in vc]
+    
+    
 
     squarify.plot(sizes=list(vc.values), label=pd.Series(vc.keys()).to_string(index=False).replace(" ", "").splitlines(), alpha=.8, value=round(vc/vc.sum(),2), pad=0.05, color=colors,  text_kwargs={'fontsize': 22, 'fontfamily' : 'sans-serif'})
     plt.axis('off')
