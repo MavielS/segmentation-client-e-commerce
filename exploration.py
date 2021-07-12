@@ -62,6 +62,7 @@ def analyse_forme(df,thresh_na=60, all=False):
         ax2.set_yticks(np.arange(0,101,5))
 
         plt.show()
+        
     
 def mesure_forme_col(data: pd.Series, bins=None, title='Distribution et boxplot', figsize=(12,8), plotly=True):  
     '''
