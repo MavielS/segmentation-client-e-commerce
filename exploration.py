@@ -151,22 +151,22 @@ def mesure_forme_col(data: pd.Series, bins=None, title='Distribution et boxplot'
 
         plt.show()
     
-def squarify_value_counts(data: pd.Series, nb_square: int= 8, title: str='Répartition valeurs quantitatives/qualitatives'):
+def squarify_value_counts(data: pd.Series, nb_square: int=8, title: str='Répartition valeurs quantitatives/qualitatives'):
     # TODO: Faire en sorte qu'on lui passe une figure pour ajouter un ax a cette figure
     plt.subplots(figsize=(16,16))
     
     # Sélectionne les nb_square catégories les + présentes 
     vc_tmp = data.value_counts()/data.shape[0]
     
-    if nb_square >= vc_tmp.shape[0]:
+    if nb_square > vc_tmp.shape[0]:
         nb_square =  vc_tmp.shape[0]
-    
     th = vc_tmp.iloc[nb_square-1]
 
     to_append_vc = 1 - vc_tmp[(data.value_counts()/data.shape[0]) > th].sum()
     vc = vc_tmp[(data.value_counts()/data.shape[0]) > th]
 
-    vc = vc.append(pd.Series(data={'Others':to_append_vc}))
+    if th > vc_tmp.min():
+        vc = vc.append(pd.Series(data={'Others':to_append_vc}))
 
     # create a color palette, mapped to these values
     cmap = matplotlib.cm.Reds
