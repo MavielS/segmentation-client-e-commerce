@@ -3,6 +3,7 @@ Si vous n'arrivez pas à vous débarrasser du message: *"Sorry, something went w
 
 [Exploration](https://nbviewer.jupyter.org/github/MavielS/segmentation-client-e-commerce/blob/master/EDA.ipynb) <br>
 [Modélisation](https://nbviewer.jupyter.org/github/MavielS/segmentation-client-e-commerce/blob/master/Modelling.ipynb) <br>
+[Modélisation partie 2](https://nbviewer.jupyter.org/github/MavielS/segmentation-client-e-commerce/blob/master/Modelling_2.ipynb) <br>
 
 <br>
 Vous pouvez ensuite cliquer sur **Open in Colab**.
